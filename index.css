@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-panel {
+    background-color: rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgb(255 255 255 / 0.8);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  }
+
+  .glass-dark {
+    background-color: rgb(15 23 42 / 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#6366f1] to-[#ec4899];
+  }
+
+  .pattern-grid {
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+body {
+  @apply bg-[#F8FAFC];
+}
