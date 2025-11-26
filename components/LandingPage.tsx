@@ -463,15 +463,15 @@ export const LandingPage: React.FC = () => {
              <div className="p-8 rounded-3xl bg-gray-900 text-white shadow-2xl transform scale-105 relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Recommandé</div>
                 <h3 className="text-xl font-bold mb-2">Créateur</h3>
-                <div className="text-4xl font-bold mb-6">9.99€<span className="text-sm text-gray-400 font-normal">/mois</span></div>
+                <div className="text-4xl font-bold mb-6">5000 FCFA<span className="text-sm text-gray-400 font-normal">/mois</span></div>
                 <ul className="space-y-3 mb-8 text-sm text-gray-300">
-                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-primary"/> Générations illimitées</li>
+                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-primary"/> 50 Crédits / mois</li>
                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-primary"/> Tous les styles (Clay, 3D)</li>
                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-primary"/> Haute Définition (4K)</li>
                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-primary"/> Pas de watermark</li>
                 </ul>
                 <button onClick={handleStart} className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary font-bold shadow-lg hover:shadow-primary/50 transition-shadow">
-                   Essayer 7 jours
+                   Commencer maintenant
                 </button>
              </div>
 
