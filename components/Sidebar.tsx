@@ -27,30 +27,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { isPro } = useApp();
   
   const menuItems = [
-    { id: View.APP, label: 'Photo Studio', icon: ImageIcon, path: '/app' },
-    { id: View.MOTION, label: 'Motion Studio', icon: Clapperboard, path: '/motion' },
-    { id: View.GALLERY, label: 'Ma Galerie', icon: LayoutGrid, path: '/gallery' },
-    { id: View.PRICING, label: 'Crédits & Plans', icon: CreditCard, path: '/pricing' },
+    { id: View.APP, label: 'Photo Studio', icon: ImageIcon, path: '/app', comingSoon: false },
+    { id: View.MOTION, label: 'Motion Studio', icon: Clapperboard, path: '/motion', comingSoon: true },
+    { id: View.GALLERY, label: 'Ma Galerie', icon: LayoutGrid, path: '/gallery', comingSoon: false },
+    { id: View.PRICING, label: 'Crédits & Plans', icon: CreditCard, path: '/pricing', comingSoon: false },
   ];
 
   return (
     <>
       {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-3 px-2 z-50 safe-area-bottom">
-        {menuItems.map((item) => (
-          <Link
-            key={item.id}
-            to={item.path}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+        {menuItems.map((item) => {
+          const content = (
+            <div className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative ${
               currentView === item.id 
                 ? 'text-primary bg-primary/5' 
+                : item.comingSoon
+                ? 'text-gray-300 cursor-not-allowed opacity-60'
                 : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <item.icon size={24} strokeWidth={currentView === item.id ? 2.5 : 2} />
-            <span className="text-[10px] font-medium">{item.label.split(' ')[0]}</span>
-          </Link>
-        ))}
+            }`}>
+              <item.icon size={24} strokeWidth={currentView === item.id ? 2.5 : 2} />
+              <span className="text-[10px] font-medium">{item.label.split(' ')[0]}</span>
+              {item.comingSoon && (
+                <span className="absolute -top-1 -right-1 text-[8px] uppercase bg-gray-200 text-gray-600 px-1 py-0.5 rounded font-bold">
+                  Bientôt
+                </span>
+              )}
+            </div>
+          );
+
+          if (item.comingSoon) {
+            return (
+              <div key={item.id} className="relative">
+                {content}
+              </div>
+            );
+          }
+
+          return (
+            <Link key={item.id} to={item.path}>
+              {content}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Desktop Sidebar */}
@@ -74,27 +93,60 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="mb-6 px-4">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Menu Principal</p>
             <div className="space-y-1">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.id}
-                  to={item.path}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
+              {menuItems.map((item) => {
+                const content = (
+                  <div className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative ${
                     currentView === item.id 
                       ? 'bg-primary text-white shadow-lg shadow-primary/25 font-medium' 
+                      : item.comingSoon
+                      ? 'text-gray-400 cursor-not-allowed opacity-60'
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <item.icon 
-                    size={20} 
-                    className={`transition-transform duration-300 ${currentView === item.id ? 'scale-110' : 'group-hover:scale-110'}`}
-                  />
-                  <span>{item.label}</span>
-                  
-                  {currentView === item.id && (
-                    <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                  )}
-                </Link>
-              ))}
+                  }`}>
+                    <item.icon 
+                      size={20} 
+                      className={`transition-transform duration-300 ${
+                        currentView === item.id 
+                          ? 'scale-110' 
+                          : item.comingSoon 
+                          ? '' 
+                          : 'group-hover:scale-110'
+                      }`}
+                    />
+                    <span>{item.label}</span>
+                    
+                    {item.comingSoon && (
+                      <span className="ml-auto text-[10px] uppercase bg-gray-200 text-gray-600 px-2 py-0.5 rounded font-bold">
+                        Bientôt
+                      </span>
+                    )}
+                    
+                    {currentView === item.id && !item.comingSoon && (
+                      <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                );
+
+                if (item.comingSoon) {
+                  return (
+                    <div 
+                      key={item.id}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Optionnel: afficher un message ou une notification
+                      }}
+                      title="Fonctionnalité à venir"
+                    >
+                      {content}
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link key={item.id} to={item.path}>
+                    {content}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </nav>
@@ -103,7 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-4 m-4 bg-slate-50 rounded-2xl border border-slate-100">
           <Link to="/profile" className="flex items-center gap-3 mb-3 hover:bg-slate-100 p-2 rounded-lg transition-colors -mx-2">
             <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-lg shadow-sm">
-              {userEmail ? userEmail[0].toUpperCase() : '👤'}
+              {userEmail && typeof userEmail === 'string' && userEmail.length > 0 ? userEmail[0].toUpperCase() : '👤'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-gray-900 truncate">

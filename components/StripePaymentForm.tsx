@@ -8,13 +8,13 @@ import {
 } from '@stripe/react-stripe-js';
 import { useApp } from '../src/context/AppContext';
 import { supabase } from '../src/lib/supabase';
-import { X } from 'lucide-react';
+import { X, CheckCircle, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-const CheckoutForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const CheckoutForm: React.FC<{ onClose: () => void; onSuccess: () => void }> = ({ onClose, onSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { addCredits, user } = useApp();
@@ -65,9 +65,45 @@ const CheckoutForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setProcessing(false);
       } else {
         console.log('[PaymentIntent]', data.paymentIntent);
-        addCredits(50);
+        
+        // Vérifier si la transaction existe déjà pour éviter les doublons
+        const paymentIntentId = data.paymentIntent?.id;
+        if (paymentIntentId && user) {
+          const { data: existingTx } = await supabase
+            .from('transactions')
+            .select('id')
+            .eq('provider', 'stripe')
+            .eq('user_id', user.id)
+            .or(`plan_name.ilike.%${paymentIntentId}%,plan_name.eq.Mode Pro`)
+            .single();
+          
+          if (!existingTx) {
+            // Ajouter les crédits seulement si la transaction n'existe pas déjà
+            await addCredits(50, 'stripe', 5000);
+          } else {
+            console.log('✅ Transaction déjà traitée, rafraîchissement des données uniquement');
+          }
+        } else {
+          // Fallback si pas de paymentIntentId
+          await addCredits(50, 'stripe', 5000);
+        }
+        
+        // Rafraîchir les données utilisateur depuis la base de données
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('credits, is_pro')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            // Les données seront mises à jour via le contexte
+            // On déclenche juste un rafraîchissement
+            window.dispatchEvent(new CustomEvent('refreshUserData'));
+          }
+        }
+        
         setProcessing(false);
-        onClose();
         
         // Confetti Explosion
         confetti({
@@ -76,7 +112,8 @@ const CheckoutForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           origin: { y: 0.6 }
         });
 
-        alert('🎉 Félicitations ! Vous êtes maintenant membre Pro !\n\n50 crédits ont été ajoutés à votre compte.');
+        // Appeler le callback de succès au lieu de fermer directement
+        onSuccess();
       }
     }
   };
@@ -120,30 +157,68 @@ const CheckoutForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 };
 
 export const StripePaymentForm: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const [status, setStatus] = useState<'idle' | 'success'>('idle');
+
   if (!isOpen) return null;
+
+  const handleSuccess = () => {
+    setStatus('success');
+  };
+
+  const handleClose = () => {
+    setStatus('idle');
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-scale-up">
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
         >
           <X size={20} />
         </button>
 
-        <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Paiement par Carte</h3>
+        {status === 'idle' && (
+          <>
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Paiement par Carte</h3>
 
-        <Elements stripe={stripePromise}>
-          <CheckoutForm onClose={onClose} />
-        </Elements>
-        
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            Paiement Sécurisé par Stripe
-          </p>
-        </div>
+            <Elements stripe={stripePromise}>
+              <CheckoutForm onClose={handleClose} onSuccess={handleSuccess} />
+            </Elements>
+            
+            <div className="mt-6 text-center">
+              <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Paiement Sécurisé par Stripe
+              </p>
+            </div>
+          </>
+        )}
+
+        {status === 'success' && (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={32} className="text-green-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              🎉 Félicitations !
+            </h3>
+            <p className="text-gray-500 mb-2">
+              Vous êtes maintenant membre Pro !
+            </p>
+            <p className="text-gray-500 mb-6">
+              50 crédits ont été ajoutés à votre compte.
+            </p>
+            <button
+              onClick={handleClose}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              Parfait !
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

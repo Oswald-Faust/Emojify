@@ -8,8 +8,18 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        hmr: {
+          overlay: true,
+        },
       },
-      plugins: [react()],
+      plugins: [
+        react({
+          // Améliore la compatibilité avec Fast Refresh
+          fastRefresh: true,
+          // Exclut les fichiers problématiques du Fast Refresh si nécessaire
+          exclude: /node_modules/,
+        })
+      ],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
@@ -18,6 +28,18 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      }
+      },
+      // Optimisations pour éviter les problèmes de cache
+      optimizeDeps: {
+        include: ['react', 'react-dom', 'react-router-dom'],
+      },
+      build: {
+        // Améliore la stabilité du build
+        rollupOptions: {
+          output: {
+            manualChunks: undefined,
+          },
+        },
+      },
     };
 });

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Wand2, ArrowRight, Box, Palette, Zap, CheckCircle2, Smartphone, MousePointerClick, Star, Quote, HelpCircle, ShieldCheck, Copyright } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import { useApp } from '../src/context/AppContext';
@@ -112,7 +112,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-display font-black text-gray-900 leading-tight mb-8 tracking-tight max-w-4xl">
-            Générez votre <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">Avatar 3D</span> en un instant.
+            Transformez <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">tout en 3D</span> en un instant.
           </h1>
 
           <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
@@ -478,14 +478,17 @@ export const LandingPage: React.FC = () => {
              {/* Agency Tier */}
              <div className="p-8 rounded-3xl border border-gray-100 hover:shadow-xl transition-all">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Agence</h3>
-                <div className="text-4xl font-bold text-gray-900 mb-6">29€<span className="text-sm text-gray-400 font-normal">/mois</span></div>
+                <div className="text-4xl font-bold text-gray-900 mb-6">15000 FCFA<span className="text-sm text-gray-400 font-normal">/mois</span></div>
                 <ul className="space-y-3 mb-8 text-sm text-gray-600">
                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500"/> Tout du plan Créateur</li>
                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500"/> Accès API</li>
                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500"/> Licence Commerciale</li>
                    <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500"/> Support prioritaire</li>
                 </ul>
-                <button className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-400 font-bold hover:border-gray-400 hover:text-gray-600 transition-colors">
+                <button 
+                  onClick={() => window.location.href = 'mailto:faustoswald@icloud.com'}
+                  className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-400 font-bold hover:border-gray-400 hover:text-gray-600 transition-colors"
+                >
                    Nous contacter
                 </button>
              </div>
@@ -575,18 +578,18 @@ export const LandingPage: React.FC = () => {
             <div>
               <h4 className="font-bold text-gray-900 mb-6">Ressources</h4>
               <ul className="space-y-4 text-gray-500 text-sm">
-                <li><a href="#" className="hover:text-primary">Blog</a></li>
-                <li><a href="#" className="hover:text-primary">Tutoriels</a></li>
-                <li><a href="#" className="hover:text-primary">Centre d'aide</a></li>
+                <li><Link to="/blog" className="hover:text-primary">Blog</Link></li>
+                <li><Link to="/tutorials" className="hover:text-primary">Tutoriels</Link></li>
+                <li><Link to="/help" className="hover:text-primary">Centre d'aide</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-bold text-gray-900 mb-6">Légal</h4>
               <ul className="space-y-4 text-gray-500 text-sm">
-                <li><a href="#" className="hover:text-primary">Confidentialité</a></li>
-                <li><a href="#" className="hover:text-primary">CGU</a></li>
-                <li><a href="#" className="hover:text-primary">Mentions Légales</a></li>
+                <li><Link to="/privacy" className="hover:text-primary">Confidentialité</Link></li>
+                <li><Link to="/terms" className="hover:text-primary">CGU</Link></li>
+                <li><Link to="/legal" className="hover:text-primary">Mentions Légales</Link></li>
               </ul>
             </div>
 

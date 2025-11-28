@@ -5,14 +5,14 @@ interface PaymentChoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectStripe: () => void;
-  onSelectPaystack: () => void;
+  onSelectKkiaPay: () => void;
 }
 
 export const PaymentChoiceModal: React.FC<PaymentChoiceModalProps> = ({ 
   isOpen, 
   onClose, 
   onSelectStripe, 
-  onSelectPaystack 
+  onSelectKkiaPay 
 }) => {
   if (!isOpen) return null;
 
@@ -31,7 +31,7 @@ export const PaymentChoiceModal: React.FC<PaymentChoiceModalProps> = ({
 
         <div className="space-y-4">
           <button 
-            onClick={onSelectPaystack}
+            onClick={onSelectKkiaPay}
             className="w-full p-4 rounded-2xl border-2 border-gray-100 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 group"
           >
             <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -39,7 +39,7 @@ export const PaymentChoiceModal: React.FC<PaymentChoiceModalProps> = ({
             </div>
             <div className="text-left">
               <div className="font-bold text-gray-900">Mobile Money</div>
-              <div className="text-xs text-gray-500">MTN, Moov, Orange...</div>
+              <div className="text-xs text-gray-500">MTN, Moov, Orange Money via KkiaPay</div>
             </div>
             <div className="ml-auto text-gray-300 group-hover:text-primary">→</div>
           </button>

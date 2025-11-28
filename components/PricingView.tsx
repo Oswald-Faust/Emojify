@@ -1,46 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Zap } from 'lucide-react';
-import { usePaystackPayment } from 'react-paystack';
 import { useApp } from '../src/context/AppContext';
 import { PaymentChoiceModal } from './PaymentChoiceModal';
 import { StripePaymentForm } from './StripePaymentForm';
+import { KkiaPayPayment } from './KkiaPayPayment';
 
 export const PricingView: React.FC = () => {
   const navigate = useNavigate();
-  const { user, addCredits, isPro } = useApp();
+  const { user, isPro } = useApp();
   const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false);
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
-
-  // Paystack Config
-  const config = {
-    reference: (new Date()).getTime().toString(),
-    email: user?.email || "user@example.com",
-    amount: 5000 * 100, // 5000 FCFA in kobo
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '',
-    currency: 'XOF',
-  };
-
-  const initializePaystack = usePaystackPayment(config);
-
-  const handlePaystackSuccess = (reference: any) => {
-    console.log(reference);
-    addCredits(50);
-    alert("Paiement Mobile Money réussi ! Vos crédits ont été ajoutés.");
-    navigate('/app');
-  };
-
-  const handlePaystackClose = () => {
-    console.log('Paystack closed');
-  };
+  const [isKkiaPayModalOpen, setIsKkiaPayModalOpen] = useState(false);
 
   const handlePaymentClick = () => {
     setIsChoiceModalOpen(true);
   };
 
-  const handleSelectPaystack = () => {
+  const handleSelectKkiaPay = () => {
     setIsChoiceModalOpen(false);
-    initializePaystack(handlePaystackSuccess, handlePaystackClose);
+    setIsKkiaPayModalOpen(true);
   };
 
   const handleSelectStripe = () => {
@@ -54,8 +33,16 @@ export const PricingView: React.FC = () => {
       <PaymentChoiceModal 
         isOpen={isChoiceModalOpen}
         onClose={() => setIsChoiceModalOpen(false)}
-        onSelectPaystack={handleSelectPaystack}
+        onSelectKkiaPay={handleSelectKkiaPay}
         onSelectStripe={handleSelectStripe}
+      />
+
+      <KkiaPayPayment
+        isOpen={isKkiaPayModalOpen}
+        onClose={() => setIsKkiaPayModalOpen(false)}
+        onReopen={() => setIsKkiaPayModalOpen(true)}
+        amount={5000}
+        credits={50}
       />
 
       <StripePaymentForm 
@@ -65,11 +52,17 @@ export const PricingView: React.FC = () => {
 
       <div className="text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-4">
-          Passez en mode <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Pro</span>
+          {isPro ? (
+            <>Vous êtes déjà <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Pro</span> !</>
+          ) : (
+            <>Passez en mode <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Pro</span></>
+          )}
         </h2>
-        <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-          Vous avez épuisé vos crédits gratuits. Débloquez la puissance illimitée de l'IA pour continuer à créer.
-        </p>
+        {!isPro && (
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+            Vous avez épuisé vos crédits gratuits. Débloquez la puissance illimitée de l'IA pour continuer à créer.
+          </p>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 items-center">
@@ -92,14 +85,15 @@ export const PricingView: React.FC = () => {
 
         {/* Pro Plan (Highlighted) */}
         <div className={`relative bg-gray-900 p-8 rounded-3xl shadow-2xl transform md:-translate-y-4 border border-gray-800 text-white ${isPro ? 'ring-4 ring-primary ring-offset-4 ring-offset-gray-50' : ''}`}>
-          {isPro && (
-            <div className="absolute -top-6 right-8 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-1">
+          {isPro ? (
+            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-1">
               <Check size={12} /> Actif
             </div>
+          ) : (
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-secondary to-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+              Le plus populaire
+            </div>
           )}
-          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-secondary to-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
-            Le plus populaire
-          </div>
           <div className="mb-6">
             <span className="text-sm font-bold uppercase tracking-wider text-primary">Créateur</span>
             <div className="flex items-end gap-1 mt-2">
@@ -127,7 +121,7 @@ export const PricingView: React.FC = () => {
             {isPro ? 'Vous êtes ici' : 'Payer 5000 FCFA'}
           </button>
           
-          {!isPro && <p className="text-center text-xs text-gray-500 mt-4">Paiement sécurisé par Paystack & Stripe</p>}
+          {!isPro && <p className="text-center text-xs text-gray-500 mt-4">Paiement sécurisé par KkiaPay & Stripe</p>}
         </div>
 
         {/* Agency Plan */}
@@ -135,7 +129,7 @@ export const PricingView: React.FC = () => {
           <div className="mb-4">
             <span className="text-sm font-bold uppercase tracking-wider text-gray-500">Agence</span>
             <div className="flex items-end gap-1 mt-2">
-              <h3 className="text-3xl font-bold text-gray-900">29€</h3>
+              <h3 className="text-3xl font-bold text-gray-900">15000 FCFA</h3>
               <span className="text-gray-500 mb-1">/mois</span>
             </div>
           </div>
@@ -146,7 +140,7 @@ export const PricingView: React.FC = () => {
             <li className="flex items-center gap-3"><Check size={18} className="text-primary" /> Mode Équipe (5 utilisateurs)</li>
           </ul>
           <button 
-            onClick={() => window.location.href = 'mailto:sales@emojify.io'}
+            onClick={() => window.location.href = 'mailto:faustoswald@icloud.com'}
             className="w-full py-3 rounded-xl bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-50 font-bold transition-colors"
           >
             Contacter les ventes

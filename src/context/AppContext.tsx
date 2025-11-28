@@ -14,7 +14,7 @@ interface AppContextType {
   signIn: (email: string) => Promise<void>; // Magic Link for simplicity or we can add password later if needed, but AuthView has password field. Let's support password.
   signOut: () => Promise<void>;
   decrementCredits: () => void;
-  addCredits: (amount: number) => Promise<void>;
+  addCredits: (amount: number, provider?: string, transactionAmount?: number) => Promise<void>;
 
   // Gallery
   galleryItems: GalleryItem[];
@@ -88,7 +88,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         // Fetch Profile (Credits)
         const { data: profile } = await supabase
           .from('profiles')
-          .select('credits')
+          .select('credits, is_pro')
           .eq('id', currentUser.id)
           .single();
         
@@ -154,6 +154,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Listener pour rafraîchir les données utilisateur
+  useEffect(() => {
+    const handleRefreshUserData = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('credits, is_pro')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setCredits(profile.credits);
+          setIsPro(profile.is_pro || false);
+        }
+      }
+    };
+
+    window.addEventListener('refreshUserData', handleRefreshUserData);
+    return () => window.removeEventListener('refreshUserData', handleRefreshUserData);
+  }, [user]);
+
   // --- Actions ---
 
   const signIn = async (email: string) => {
@@ -187,43 +208,73 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addCredits = async (amount: number) => {
-    // Optimistic update
-    setCredits(prev => prev + amount);
-    setIsPro(true);
+  const addCredits = async (amount: number, provider: string = 'stripe', transactionAmount: number = 5000) => {
+    if (!user) return;
 
-    if (user) {
-      // DB Update
-      const { data: currentProfile } = await supabase.from('profiles').select('credits').eq('id', user.id).single();
-      if (currentProfile) {
-        await supabase.from('profiles').update({ 
-          credits: currentProfile.credits + amount,
-          is_pro: true 
-        }).eq('id', user.id);
-        
-        // Record Transaction
-        const newTx = {
-          user_id: user.id,
-          amount: 5000, // Assuming 5000 for now as it's the only plan
-          currency: 'XOF',
-          credits_added: amount,
-          plan_name: 'Mode Pro',
-          provider: 'stripe', // Defaulting to stripe for now, ideally passed as arg
-          status: 'completed'
-        };
-        
-        await supabase.from('transactions').insert(newTx);
-        
-        // Update local transactions state
-        // We need to fetch the inserted row to get the ID and timestamp, or just fake it for optimistic UI
-        // Let's just re-fetch or fake it. Faking it for speed.
-        const optimisticTx: Transaction = {
-          id: Date.now().toString(),
-          ...newTx,
-          created_at: new Date().toISOString()
-        };
-        setTransactions(prev => [optimisticTx, ...prev]);
+    // Vérifier si une transaction similaire existe déjà pour éviter les doublons
+    const { data: recentTx } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('provider', provider)
+      .eq('plan_name', 'Mode Pro')
+      .eq('status', 'completed')
+      .gte('created_at', new Date(Date.now() - 60000).toISOString()) // Dernière minute
+      .single();
+
+    if (recentTx) {
+      console.log('⚠️ Transaction déjà traitée récemment, évitement du doublon');
+      // Rafraîchir les données depuis la DB au lieu d'ajouter
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits, is_pro')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile) {
+        setCredits(profile.credits);
+        setIsPro(profile.is_pro || false);
       }
+      return;
+    }
+
+    // DB Update - Récupérer le profil actuel pour vérifier si l'utilisateur était déjà Pro
+    const { data: currentProfile } = await supabase.from('profiles').select('credits, is_pro').eq('id', user.id).single();
+    if (currentProfile) {
+      // Si l'utilisateur n'était pas Pro, définir les crédits à exactement 50
+      // Sinon, ajouter les crédits aux crédits existants
+      const wasPro = currentProfile.is_pro || false;
+      const newCredits = wasPro ? currentProfile.credits + amount : amount;
+      
+      // Optimistic update
+      setCredits(newCredits);
+      setIsPro(true);
+
+      await supabase.from('profiles').update({ 
+        credits: newCredits,
+        is_pro: true 
+      }).eq('id', user.id);
+      
+      // Record Transaction
+      const newTx = {
+        user_id: user.id,
+        amount: transactionAmount,
+        currency: 'XOF',
+        credits_added: amount,
+        plan_name: 'Mode Pro',
+        provider: provider,
+        status: 'completed'
+      };
+      
+      await supabase.from('transactions').insert(newTx);
+      
+      // Update local transactions state
+      const optimisticTx: Transaction = {
+        id: Date.now().toString(),
+        ...newTx,
+        created_at: new Date().toISOString()
+      };
+      setTransactions(prev => [optimisticTx, ...prev]);
     }
   };
 
@@ -329,50 +380,55 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const contextValue: AppContextType = {
+    user,
+    credits,
+    isPro,
+    setIsPro,
+    isLoadingUser,
+    signIn,
+    signOut,
+    decrementCredits,
+    addCredits,
+    transactions,
+    galleryItems,
+    addToGallery,
+    removeFromGallery,
+    appState,
+    setAppState,
+    error,
+    setError,
+    originalImage,
+    setOriginalImage,
+    generatedImage,
+    setGeneratedImage,
+    generatedVideo,
+    setGeneratedVideo,
+    selectedStyle,
+    setSelectedStyle,
+    selectedMood,
+    setSelectedMood,
+    selectedMotion,
+    setSelectedMotion,
+    generateImage,
+    generateVideo,
+    resetGenerator
+  };
+
   return (
-    <AppContext.Provider value={{
-      user,
-      credits,
-      isPro,
-      setIsPro,
-      isLoadingUser,
-      signIn,
-      signOut,
-      decrementCredits,
-      addCredits,
-      transactions,
-      galleryItems,
-      addToGallery,
-      removeFromGallery,
-      appState,
-      setAppState,
-      error,
-      setError,
-      originalImage,
-      setOriginalImage,
-      generatedImage,
-      setGeneratedImage,
-      generatedVideo,
-      setGeneratedVideo,
-      selectedStyle,
-      setSelectedStyle,
-      selectedMood,
-      setSelectedMood,
-      selectedMotion,
-      setSelectedMotion,
-      generateImage,
-      generateVideo,
-      resetGenerator
-    }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );
 };
 
-export const useApp = () => {
+// Export du hook séparément pour une meilleure compatibilité avec Fast Refresh
+function useApp(): AppContextType {
   const context = useContext(AppContext);
   if (context === undefined) {
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;
-};
+}
+
+export { useApp };

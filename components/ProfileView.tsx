@@ -72,7 +72,7 @@ export const ProfileView: React.FC = () => {
           {/* User Info */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-4xl text-white shadow-lg">
-              {user?.email ? user.email[0].toUpperCase() : '👤'}
+              {user?.email && typeof user.email === 'string' && user.email.length > 0 ? user.email[0].toUpperCase() : '👤'}
             </div>
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-xl font-bold text-gray-900 mb-1">
@@ -149,7 +149,10 @@ export const ProfileView: React.FC = () => {
               <div className="w-full bg-gray-700 rounded-full h-1.5 mb-6">
                 <div className="bg-gradient-to-r from-primary to-secondary h-full rounded-full" style={{ width: `${(credits / 10) * 100}%` }}></div>
               </div>
-              <button className="w-full py-3 rounded-xl bg-white text-gray-900 font-bold text-sm hover:bg-gray-100 transition-colors">
+              <button 
+                onClick={() => navigate('/pricing')}
+                className="w-full py-3 rounded-xl bg-white text-gray-900 font-bold text-sm hover:bg-gray-100 transition-colors"
+              >
                 Recharger
               </button>
             </div>
@@ -167,7 +170,10 @@ export const ProfileView: React.FC = () => {
               </div>
             </div>
             {!isPro && (
-              <button className="w-full py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-xs hover:border-primary hover:text-primary transition-colors">
+              <button 
+                onClick={() => navigate('/pricing')}
+                className="w-full py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-xs hover:border-primary hover:text-primary transition-colors"
+              >
                 Passer au plan Pro
               </button>
             )}

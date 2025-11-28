@@ -50,7 +50,7 @@ export const EditProfileView: React.FC = () => {
           {/* Avatar Placeholder (Upload not implemented yet) */}
           <div className="flex flex-col items-center gap-4 mb-8">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-4xl text-white shadow-lg">
-              {user?.email ? user.email[0].toUpperCase() : '👤'}
+              {user?.email && typeof user.email === 'string' && user.email.length > 0 ? user.email[0].toUpperCase() : '👤'}
             </div>
             <button type="button" className="text-sm font-bold text-primary hover:text-primary/80 transition-colors">
               Modifier l'avatar (Bientôt)
