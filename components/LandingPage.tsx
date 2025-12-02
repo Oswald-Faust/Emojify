@@ -7,7 +7,7 @@ import { useApp } from '../src/context/AppContext';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setOriginalImage, user } = useApp();
+  const { setOriginalImage, user, isPro } = useApp();
 
   const handleStart = () => {
     if (user) {
@@ -442,6 +442,28 @@ export const LandingPage: React.FC = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-display font-bold text-gray-900">Des tarifs simples</h2>
             <p className="text-gray-500 mt-4">Commencez gratuitement, payez pour aller plus loin.</p>
+            
+            {/* Afficher le statut de l'abonnement si l'utilisateur est connecté */}
+            {user && (
+              <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200">
+                {isPro ? (
+                  <>
+                    <Zap className="w-5 h-5 text-purple-600" />
+                    <span className="font-semibold text-gray-900">
+                      Abonnement <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Mode Pro</span> actif
+                    </span>
+                    <span className="ml-2 bg-green-500 w-2 h-2 rounded-full animate-pulse"></span>
+                  </>
+                ) : (
+                  <>
+                    <Star className="w-5 h-5 text-gray-500" />
+                    <span className="font-medium text-gray-700">
+                      Plan Gratuit - Passez au Pro pour plus de fonctionnalités
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">

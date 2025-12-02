@@ -69,23 +69,15 @@ export const AuthView: React.FC = () => {
         {/* Floating Emojis */}
         <div className="absolute top-20 left-20 text-6xl animate-float">😎</div>
         <div className="absolute bottom-40 right-20 text-8xl animate-float-delayed">🦊</div>
-        <div className="absolute top-1/2 right-1/3 text-4xl animate-bounce-slow">🤖</div>
+    
 
         <div className="relative z-20 text-center p-12 max-w-xl">
           <h2 className="text-5xl font-display font-bold text-white mb-6">Rejoignez le club des créateurs.</h2>
-          <p className="text-gray-400 text-xl leading-relaxed">
-            "Emojify a changé la façon dont je communique avec mon équipe. C'est fun, rapide et incroyablement ressemblant."
+          <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+            Transformez vos photos en émojis uniques avec l'intelligence artificielle. 
+            Des milliers de créateurs utilisent déjà Emojify pour donner vie à leurs idées.
           </p>
-          <div className="mt-8 flex items-center justify-center gap-4">
-             <div className="flex -space-x-3">
-               {[1,2,3,4].map(i => (
-                 <div key={i} className="w-10 h-10 rounded-full bg-gray-700 border-2 border-gray-900 flex items-center justify-center text-xs text-white">
-                    User
-                 </div>
-               ))}
-             </div>
-             <span className="text-white font-bold">+10k membres</span>
-          </div>
+         
         </div>
       </div>
 
