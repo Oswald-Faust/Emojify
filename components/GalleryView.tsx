@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Edit, ImageOff, Calendar, Play, Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
+import { Download, Trash2, Edit, ImageOff, Calendar, Play, Video as VideoIcon, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { useApp } from '../src/context/AppContext';
-import { GalleryItem, AppState } from '../types';
+import { GalleryItem } from '../types';
 
 interface GalleryViewProps {
   items: GalleryItem[];
@@ -13,7 +13,7 @@ interface GalleryViewProps {
 
 export const GalleryView: React.FC = () => {
   const navigate = useNavigate();
-  const { galleryItems, removeFromGallery, setGeneratedImage, setAppState } = useApp();
+  const { galleryItems, removeFromGallery, setGeneratedImage, isLoadingGallery } = useApp();
   
   // Backward compatibility for props if needed, but we use context now
   const items = galleryItems;
@@ -38,8 +38,7 @@ export const GalleryView: React.FC = () => {
     // Ne permettre l'édition que pour les images, pas les vidéos
     if (item.mediaType === 'IMAGE') {
       setGeneratedImage(item.generatedImage);
-      setAppState(AppState.EDITING);
-      navigate('/app');
+      navigate(`/app/edit/${item.id}`);
     }
   };
 
@@ -51,6 +50,38 @@ export const GalleryView: React.FC = () => {
       minute: '2-digit'
     });
   };
+
+  // Afficher le loader pendant le chargement initial
+  if (isLoadingGallery) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in-up">
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-primary/10 blur-2xl opacity-50 animate-pulse rounded-full"></div>
+          <div className="relative w-20 h-20 bg-white rounded-full shadow-xl flex items-center justify-center border-4 border-primary/20">
+            <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <ImageIcon className="w-8 h-8 text-primary" />
+          </div>
+          <Sparkles className="absolute -top-2 -right-2 text-secondary w-6 h-6 animate-pulse" />
+          <Sparkles className="absolute bottom-0 -left-3 text-accent w-5 h-5 animate-pulse" style={{ animationDelay: '0.3s' }} />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Chargement de votre galerie...</h2>
+        <p className="text-gray-500">Récupération de vos créations</p>
+        
+        {/* Barre de progression animée */}
+        <div className="mt-6 w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-primary via-secondary to-accent animate-pulse" 
+               style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }}></div>
+        </div>
+        
+        <style>{`
+          @keyframes loading-bar {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

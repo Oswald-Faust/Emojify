@@ -7,8 +7,8 @@ import { generateEmoji, generateAvatarAnimation } from '../../services/geminiSer
 interface AppContextType {
   // User & Credits
   user: User | null;
-  credits: number;
-  isPro: boolean;
+  credits: number | null;
+  isPro: boolean | null;
   setIsPro: (isPro: boolean) => void;
   isLoadingUser: boolean;
   signIn: (email: string) => Promise<void>; // Magic Link for simplicity or we can add password later if needed, but AuthView has password field. Let's support password.
@@ -18,6 +18,7 @@ interface AppContextType {
 
   // Gallery
   galleryItems: GalleryItem[];
+  isLoadingGallery: boolean;
   addToGallery: (item: GalleryItem) => void;
   removeFromGallery: (id: string) => void;
 
@@ -60,12 +61,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // --- Global State ---
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [credits, setCredits] = useState<number>(INITIAL_CREDITS);
-  const [isPro, setIsPro] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null); // null jusqu'à ce que les données soient chargées
+  const [isPro, setIsPro] = useState<boolean | null>(null); // null jusqu'à ce que les données soient chargées
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   // --- Gallery State ---
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [isLoadingGallery, setIsLoadingGallery] = useState(true);
 
   // --- Generator State ---
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -84,54 +86,101 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Auth Listener & Data Fetching
   useEffect(() => {
     const fetchUserData = async (currentUser: User | null) => {
+      setIsLoadingGallery(true);
+      
       if (currentUser) {
-        // Fetch Profile (Credits)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('credits, is_pro')
-          .eq('id', currentUser.id)
-          .single();
-        
-        if (profile) {
-          setCredits(profile.credits);
-          setIsPro(profile.is_pro || false);
-        }
+        try {
+          // Charger la galerie en priorité et en parallèle avec le profil
+          // Les transactions peuvent être chargées en arrière-plan
+          const [profileResult, galleryResult] = await Promise.all([
+            supabase
+              .from('profiles')
+              .select('credits, is_pro')
+              .eq('id', currentUser.id)
+              .single(),
+            supabase
+              .from('gallery')
+              .select('*')
+              .eq('user_id', currentUser.id)
+              .order('created_at', { ascending: false })
+          ]);
+          
+          // Mettre à jour le profil - créer le profil s'il n'existe pas
+          if (profileResult.data) {
+            setCredits(profileResult.data.credits ?? INITIAL_CREDITS);
+            setIsPro(profileResult.data.is_pro ?? false);
+          } else if (profileResult.error && profileResult.error.code === 'PGRST116') {
+            // Profil n'existe pas encore, créer un profil par défaut
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .insert({
+                id: currentUser.id,
+                credits: INITIAL_CREDITS,
+                is_pro: false
+              })
+              .select('credits, is_pro')
+              .single();
+            
+            if (newProfile) {
+              setCredits(newProfile.credits);
+              setIsPro(newProfile.is_pro || false);
+            } else {
+              // Fallback si la création échoue - utiliser les valeurs par défaut
+              setCredits(INITIAL_CREDITS);
+              setIsPro(false);
+            }
+          } else {
+            // Autre erreur - ne pas définir de valeurs par défaut, laisser null
+            console.warn('Erreur lors du chargement du profil:', profileResult.error);
+            // Ne pas définir de valeurs par défaut, attendre un rechargement
+          }
 
-        // Fetch Gallery
-        const { data: gallery } = await supabase
-          .from('gallery')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('created_at', { ascending: false });
-        
-        if (gallery) {
-          const mappedGallery: GalleryItem[] = gallery.map(item => ({
-            id: item.id,
-            generatedImage: item.url,
-            videoUrl: item.video_url,
-            originalImage: item.prompt, // Using prompt field for original image url for now as per schema comment
-            style: item.style as EmojiStyle,
-            mood: item.mood as EmojiMood,
-            mediaType: item.media_type as 'IMAGE' | 'VIDEO',
-            createdAt: new Date(item.created_at).getTime()
-          }));
-          setGalleryItems(mappedGallery);
-        }
+          // Mettre à jour la galerie immédiatement et arrêter le loader
+          if (galleryResult.data) {
+            const mappedGallery: GalleryItem[] = galleryResult.data.map(item => ({
+              id: item.id,
+              generatedImage: item.url,
+              videoUrl: item.video_url,
+              originalImage: item.prompt, // Using prompt field for original image url for now as per schema comment
+              style: item.style as EmojiStyle,
+              mood: item.mood as EmojiMood,
+              mediaType: item.media_type as 'IMAGE' | 'VIDEO',
+              createdAt: new Date(item.created_at).getTime()
+            }));
+            setGalleryItems(mappedGallery);
+          } else {
+            setGalleryItems([]);
+          }
+          
+          // Arrêter le loader dès que la galerie est chargée
+          setIsLoadingGallery(false);
 
-        // Fetch Transactions
-        const { data: txs } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('created_at', { ascending: false });
-        
-        if (txs) {
-          setTransactions(txs as Transaction[]);
+          // Charger les transactions en arrière-plan (non bloquant)
+          supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .then(({ data: txs }) => {
+              if (txs) {
+                setTransactions(txs as Transaction[]);
+              }
+            });
+        } catch (error) {
+          console.error('Erreur lors du chargement des données utilisateur:', error);
+          // En cas d'erreur, ne pas définir de valeurs par défaut
+          setCredits(null);
+          setIsPro(null);
+          setGalleryItems([]);
+          setIsLoadingGallery(false);
         }
       } else {
+        // Utilisateur non connecté - valeurs par défaut pour les invités
         setCredits(INITIAL_CREDITS);
+        setIsPro(false);
         setGalleryItems([]);
         setTransactions([]);
+        setIsLoadingGallery(false);
       }
     };
 
@@ -184,15 +233,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setCredits(INITIAL_CREDITS);
+    setCredits(null);
+    setIsPro(null);
     setGalleryItems([]);
   };
 
   const decrementCredits = async () => {
-    if (!user) return;
+    if (!user || credits === null) return;
     
     // Optimistic update
-    setCredits(prev => Math.max(0, prev - 1));
+    setCredits(prev => prev === null ? null : Math.max(0, prev - 1));
 
     // DB Update
     const { error } = await supabase.rpc('decrement_credits', { user_id: user.id });
@@ -315,7 +365,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const generateImage = async () => {
     if (!originalImage) return;
-    if (credits <= 0) return; 
+    if (credits === null || credits <= 0) return; 
 
     setAppState(AppState.PROCESSING);
     setError(null);
@@ -349,7 +399,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const generateVideo = async () => {
     if (!originalImage) return;
-    if (credits <= 0) return;
+    if (credits === null || credits <= 0) return;
 
     setAppState(AppState.PROCESSING);
     setError(null);
@@ -392,6 +442,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addCredits,
     transactions,
     galleryItems,
+    isLoadingGallery,
     addToGallery,
     removeFromGallery,
     appState,

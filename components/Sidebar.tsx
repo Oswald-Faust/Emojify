@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { View } from '../types';
 import { 
   LayoutGrid, 
@@ -24,7 +24,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   credits,
   userEmail
 }) => {
-  const { isPro } = useApp();
+  const { isPro, signOut } = useApp();
+  const navigate = useNavigate();
   
   const menuItems = [
     { id: View.APP, label: 'Photo Studio', icon: ImageIcon, path: '/app', comingSoon: false },
@@ -162,7 +163,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {userEmail ? userEmail : 'Invité'}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {isPro ? (
+                {isPro === null ? (
+                  'Chargement...'
+                ) : isPro ? (
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary font-bold">
                     ✨ Mode Pro
                   </span>
@@ -176,14 +179,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-gray-500 uppercase">Crédits</span>
-              <span className="text-xs font-bold text-primary">{credits} restants</span>
+              <span className="text-xs font-bold text-primary">
+                {credits === null ? 'Chargement...' : `${credits} restants`}
+              </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-500"
-                style={{ width: `${(credits / 10) * 100}%` }}
-              ></div>
-            </div>
+            {credits !== null && (
+              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-500"
+                  style={{ width: `${(credits / 10) * 100}%` }}
+                ></div>
+              </div>
+            )}
             <Link 
               to="/pricing"
               className="mt-3 w-full block text-center text-xs font-bold text-primary hover:text-primaryDark transition-colors py-1"
@@ -194,10 +201,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Logout Button */}
-        {/* Assuming onChangeView is passed as a prop or available in context */}
-        {/* This button was outside the aside tag, moving it inside for structural correctness */}
         <button 
-            // onClick={() => onChangeView(View.LANDING)} // onChangeView is not defined in current scope
+            onClick={async () => {
+              await signOut();
+              navigate('/');
+            }}
             className="mt-4 flex items-center gap-2 text-gray-400 hover:text-red-500 transition-colors w-full md:justify-start justify-center p-4"
         >
           <LogOut size={16} />

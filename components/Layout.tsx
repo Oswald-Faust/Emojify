@@ -4,11 +4,11 @@ import { useApp } from '../src/context/AppContext';
 import { View, AppState } from '../types';
 
 export const Layout: React.FC = () => {
-  const { credits, user, appState } = useApp();
+  const { credits, user } = useApp();
   const location = useLocation();
   
-  // Masquer la sidebar quand l'éditeur est ouvert
-  const isEditing = appState === AppState.EDITING;
+  // Masquer la sidebar quand l'éditeur est ouvert (détecté via l'URL)
+  const isEditing = location.pathname.startsWith('/app/edit');
 
   // Helper to map path to View enum for Sidebar highlighting
   const getCurrentView = (): View => {
@@ -34,7 +34,9 @@ export const Layout: React.FC = () => {
         {/* Mobile Header Placeholder */}
         <div className="md:hidden h-16 bg-white border-b border-gray-100 flex items-center px-4 justify-between sticky top-0 z-30">
              <span className="font-bold text-lg">Emojify</span>
-             <div className="text-xs bg-gray-100 px-2 py-1 rounded-full">{credits} crédits</div>
+             <div className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+               {credits === null ? 'Chargement...' : `${credits} crédits`}
+             </div>
         </div>
 
         <Outlet />

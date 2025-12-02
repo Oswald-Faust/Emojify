@@ -52,13 +52,15 @@ export const PricingView: React.FC = () => {
 
       <div className="text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-4">
-          {isPro ? (
+          {isPro === null ? (
+            <>Chargement...</>
+          ) : isPro ? (
             <>Vous êtes déjà <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Pro</span> !</>
           ) : (
             <>Passez en mode <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Pro</span></>
           )}
         </h2>
-        {!isPro && (
+        {isPro === null ? null : !isPro && (
           <p className="text-xl text-gray-500 max-w-2xl mx-auto">
             Vous avez épuisé vos crédits gratuits. Débloquez la puissance illimitée de l'IA pour continuer à créer.
           </p>
@@ -68,7 +70,7 @@ export const PricingView: React.FC = () => {
       <div className="grid md:grid-cols-3 gap-8 items-center">
         
         {/* Free Plan */}
-        <div className={`bg-white p-8 rounded-3xl border border-gray-200 ${isPro ? 'opacity-60 grayscale' : ''}`}>
+        <div className={`bg-white p-8 rounded-3xl border border-gray-200 ${isPro === true ? 'opacity-60 grayscale' : ''}`}>
           <div className="mb-4">
             <span className="text-sm font-bold uppercase tracking-wider text-gray-500">Découverte</span>
             <h3 className="text-3xl font-bold text-gray-900 mt-2">Gratuit</h3>
@@ -79,13 +81,13 @@ export const PricingView: React.FC = () => {
             <li className="flex items-center gap-3"><Check size={18} /> Qualité SD</li>
           </ul>
           <button disabled className="w-full py-3 rounded-xl bg-gray-100 text-gray-400 font-bold cursor-not-allowed">
-            {isPro ? 'Plan Terminé' : 'Plan Actuel'}
+            {isPro === null ? 'Chargement...' : isPro ? 'Plan Terminé' : 'Plan Actuel'}
           </button>
         </div>
 
         {/* Pro Plan (Highlighted) */}
-        <div className={`relative bg-gray-900 p-8 rounded-3xl shadow-2xl transform md:-translate-y-4 border border-gray-800 text-white ${isPro ? 'ring-4 ring-primary ring-offset-4 ring-offset-gray-50' : ''}`}>
-          {isPro ? (
+        <div className={`relative bg-gray-900 p-8 rounded-3xl shadow-2xl transform md:-translate-y-4 border border-gray-800 text-white ${isPro === true ? 'ring-4 ring-primary ring-offset-4 ring-offset-gray-50' : ''}`}>
+          {isPro === null ? null : isPro ? (
             <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-1">
               <Check size={12} /> Actif
             </div>
@@ -110,18 +112,20 @@ export const PricingView: React.FC = () => {
           </ul>
           
           <button 
-            onClick={isPro ? undefined : handlePaymentClick}
-            disabled={isPro}
+            onClick={isPro === true ? undefined : handlePaymentClick}
+            disabled={isPro === true || isPro === null}
             className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all duration-300 transform ${
-              isPro 
+              isPro === null
+                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                : isPro === true
                 ? 'bg-green-500 text-white cursor-default' 
                 : 'bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white hover:shadow-primary/50 hover:scale-105'
             }`}
           >
-            {isPro ? 'Vous êtes ici' : 'Payer 5000 FCFA'}
+            {isPro === null ? 'Chargement...' : isPro === true ? 'Vous êtes ici' : 'Payer 5000 FCFA'}
           </button>
           
-          {!isPro && <p className="text-center text-xs text-gray-500 mt-4">Paiement sécurisé par KkiaPay & Stripe</p>}
+          {isPro === false && <p className="text-center text-xs text-gray-500 mt-4">Paiement sécurisé par KkiaPay & Stripe</p>}
         </div>
 
         {/* Agency Plan */}

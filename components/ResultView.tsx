@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, RefreshCw, Share2, Edit } from 'lucide-react';
+import { useApp } from '../src/context/AppContext';
 
 interface ResultViewProps {
   originalImage: string;
   generatedImage: string;
   onReset: () => void;
-  onEdit?: () => void;
 }
 
-export const ResultView: React.FC<ResultViewProps> = ({ originalImage, generatedImage, onReset, onEdit }) => {
+export const ResultView: React.FC<ResultViewProps> = ({ originalImage, generatedImage, onReset }) => {
+  const navigate = useNavigate();
+  const { galleryItems } = useApp();
+  
+  // Trouver l'ID de l'image dans la galerie
+  const imageId = useMemo(() => {
+    const item = galleryItems.find(item => item.generatedImage === generatedImage);
+    return item?.id;
+  }, [galleryItems, generatedImage]);
+  
   const handleDownload = () => {
     const link = document.createElement('a');
     link.href = generatedImage;
@@ -16,6 +26,15 @@ export const ResultView: React.FC<ResultViewProps> = ({ originalImage, generated
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleEdit = () => {
+    if (imageId) {
+      navigate(`/app/edit/${imageId}`);
+    } else {
+      // Fallback si l'ID n'est pas trouvé (image pas encore dans la galerie)
+      navigate('/app/edit');
+    }
   };
 
   return (
@@ -71,15 +90,13 @@ export const ResultView: React.FC<ResultViewProps> = ({ originalImage, generated
           Télécharger
         </button>
         
-        {onEdit && (
-          <button
-            onClick={onEdit}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-full font-bold shadow-lg transform transition hover:-translate-y-1 hover:shadow-xl active:scale-95"
-          >
-            <Edit className="w-5 h-5" />
-            Modifier
-          </button>
-        )}
+        <button
+          onClick={handleEdit}
+          className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-full font-bold shadow-lg transform transition hover:-translate-y-1 hover:shadow-xl active:scale-95"
+        >
+          <Edit className="w-5 h-5" />
+          Modifier
+        </button>
         
         <button
           onClick={onReset}

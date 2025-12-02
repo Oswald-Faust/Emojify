@@ -145,10 +145,12 @@ export const ProfileView: React.FC = () => {
                 <span className="text-sm font-medium text-gray-300">Crédits disponibles</span>
                 <Zap className="text-yellow-400" size={20} fill="currentColor" />
               </div>
-              <div className="text-4xl font-bold mb-2">{credits}</div>
-              <div className="w-full bg-gray-700 rounded-full h-1.5 mb-6">
-                <div className="bg-gradient-to-r from-primary to-secondary h-full rounded-full" style={{ width: `${(credits / 10) * 100}%` }}></div>
-              </div>
+              <div className="text-4xl font-bold mb-2">{credits === null ? '...' : credits}</div>
+              {credits !== null && (
+                <div className="w-full bg-gray-700 rounded-full h-1.5 mb-6">
+                  <div className="bg-gradient-to-r from-primary to-secondary h-full rounded-full" style={{ width: `${(credits / 10) * 100}%` }}></div>
+                </div>
+              )}
               <button 
                 onClick={() => navigate('/pricing')}
                 className="w-full py-3 rounded-xl bg-white text-gray-900 font-bold text-sm hover:bg-gray-100 transition-colors"
@@ -166,18 +168,21 @@ export const ProfileView: React.FC = () => {
               </div>
               <div>
                 <div className="font-bold text-gray-900">Plan Actuel</div>
-                <div className="text-xs text-gray-500">{isPro ? 'Mode Pro' : 'Gratuit'}</div>
+                <div className="text-xs text-gray-500">
+                  {isPro === null ? 'Chargement...' : isPro ? 'Mode Pro' : 'Gratuit'}
+                </div>
               </div>
             </div>
-            {!isPro && (
+            {isPro === null ? (
+              <div className="text-center text-xs text-gray-400 py-2">Chargement...</div>
+            ) : !isPro ? (
               <button 
                 onClick={() => navigate('/pricing')}
                 className="w-full py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-xs hover:border-primary hover:text-primary transition-colors"
               >
                 Passer au plan Pro
               </button>
-            )}
-            {isPro && (
+            ) : (
               <div className="space-y-3">
                 <div className="w-full py-2 rounded-lg bg-green-50 text-green-600 font-bold text-xs text-center border border-green-100">
                   ✨ Abonnement Actif
@@ -194,7 +199,10 @@ export const ProfileView: React.FC = () => {
 
           {/* Logout */}
           <button 
-            onClick={signOut}
+            onClick={async () => {
+              await signOut();
+              navigate('/');
+            }}
             className="w-full py-4 rounded-2xl border border-red-100 text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
           >
             <LogOut size={18} />

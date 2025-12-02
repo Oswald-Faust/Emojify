@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { AppState, View } from '../types';
 import { ImageUploader } from './ImageUploader';
 import { LoadingState } from './LoadingState';
@@ -8,8 +8,6 @@ import { ConfigPanel } from './ConfigPanel';
 import { MotionPanel } from './MotionPanel';
 import { AlertCircle } from 'lucide-react';
 import { useApp } from '../src/context/AppContext';
-
-const ImageEditor = lazy(() => import('./ImageEditor').then(module => ({ default: module.ImageEditor })));
 
 interface StudioProps {
   mode: 'image' | 'video';
@@ -70,8 +68,14 @@ export const Studio: React.FC<StudioProps> = ({ mode }) => {
               {mode === 'video' ? 'Motion Studio' : 'Photo Studio'}
             </h2>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
-              Il vous reste <span className="font-bold text-primary">{credits} crédits</span>.
-              {mode === 'video' && " (Vidéos powered by Veo)"}
+              {credits === null ? (
+                'Chargement de vos crédits...'
+              ) : (
+                <>
+                  Il vous reste <span className="font-bold text-primary">{credits} crédits</span>.
+                  {mode === 'video' && " (Vidéos powered by Veo)"}
+                </>
+              )}
             </p>
           </div>
         )}
@@ -141,23 +145,9 @@ export const Studio: React.FC<StudioProps> = ({ mode }) => {
                    originalImage={originalImage}
                    generatedImage={generatedImage}
                    onReset={resetGenerator}
-                   onEdit={() => setAppState(AppState.EDITING)}
                  />
               ) : null}
             </>
-          )}
-
-          {appState === AppState.EDITING && generatedImage && (
-            <Suspense fallback={<LoadingState />}>
-              <ImageEditor
-                imageUrl={generatedImage}
-                onSave={(editedImageUrl) => {
-                  setGeneratedImage(editedImageUrl);
-                  setAppState(AppState.SUCCESS);
-                }}
-                onClose={() => setAppState(AppState.SUCCESS)}
-              />
-            </Suspense>
           )}
 
           {appState === AppState.ERROR && (

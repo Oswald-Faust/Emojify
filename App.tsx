@@ -18,6 +18,8 @@ import { PrivacyView } from './components/PrivacyView';
 import { TermsView } from './components/TermsView';
 import { LegalView } from './components/LegalView';
 import { AdminBlogView } from './components/AdminBlogView';
+import { ImageEditorView } from './components/ImageEditorView';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const App: React.FC = () => {
   return (
@@ -38,9 +40,10 @@ const App: React.FC = () => {
           {/* Admin Pages */}
           <Route path="/admin/blog" element={<AdminBlogView />} />
           
-          {/* App Layout Routes */}
-          <Route element={<Layout />}>
+          {/* App Layout Routes - Protected */}
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="/app" element={<Studio mode="image" />} />
+            <Route path="/app/edit/:imageId" element={<ImageEditorView />} />
             <Route path="/motion" element={<Studio mode="video" />} />
             <Route path="/gallery" element={<GalleryView />} />
             <Route path="/pricing" element={<PricingView />} />
