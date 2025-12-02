@@ -18,6 +18,8 @@ export default defineConfig(({ mode }) => {
           fastRefresh: true,
           // Exclut les fichiers problématiques du Fast Refresh si nécessaire
           exclude: /node_modules/,
+          // Améliore le débogage en préservant les noms de fichiers originaux
+          jsxRuntime: 'automatic',
         })
       ],
       define: {
@@ -31,10 +33,21 @@ export default defineConfig(({ mode }) => {
       },
       // Optimisations pour éviter les problèmes de cache
       optimizeDeps: {
-        include: ['react', 'react-dom', 'react-router-dom'],
+        include: ['react', 'react-dom', 'react-router-dom', 'fabric'],
+        exclude: [],
+      },
+      // Configuration des source maps pour le développement
+      // Par défaut, Vite génère des source maps en mode dev, mais on s'assure qu'elles sont correctes
+      css: {
+        devSourcemap: true,
+      },
+      // S'assure que les source maps sont générées en mode développement
+      esbuild: {
+        sourcemap: true,
       },
       build: {
         // Améliore la stabilité du build
+        sourcemap: false, // Pas besoin en production
         rollupOptions: {
           output: {
             manualChunks: undefined,

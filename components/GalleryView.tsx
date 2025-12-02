@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, ImageOff, Calendar, Play, Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
+import { Download, Trash2, Edit, ImageOff, Calendar, Play, Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
 import { useApp } from '../src/context/AppContext';
-import { GalleryItem } from '../types';
+import { GalleryItem, AppState } from '../types';
 
 interface GalleryViewProps {
   items: GalleryItem[];
@@ -13,7 +13,7 @@ interface GalleryViewProps {
 
 export const GalleryView: React.FC = () => {
   const navigate = useNavigate();
-  const { galleryItems, removeFromGallery } = useApp();
+  const { galleryItems, removeFromGallery, setGeneratedImage, setAppState } = useApp();
   
   // Backward compatibility for props if needed, but we use context now
   const items = galleryItems;
@@ -32,6 +32,15 @@ export const GalleryView: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleEdit = (item: GalleryItem) => {
+    // Ne permettre l'édition que pour les images, pas les vidéos
+    if (item.mediaType === 'IMAGE') {
+      setGeneratedImage(item.generatedImage);
+      setAppState(AppState.EDITING);
+      navigate('/app');
+    }
   };
 
   const formatDate = (timestamp: number) => {
@@ -108,6 +117,15 @@ export const GalleryView: React.FC = () => {
                 >
                   <Download size={20} />
                 </button>
+                {item.mediaType === 'IMAGE' && (
+                  <button 
+                    onClick={() => handleEdit(item)}
+                    className="p-3 bg-white text-gray-900 rounded-full hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white transition-colors shadow-lg transform hover:scale-110"
+                    title="Modifier"
+                  >
+                    <Edit size={20} />
+                  </button>
+                )}
                 <button 
                   onClick={() => onDelete(item.id)}
                   className="p-3 bg-white text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-lg transform hover:scale-110"

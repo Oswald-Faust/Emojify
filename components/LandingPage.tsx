@@ -89,7 +89,7 @@ export const LandingPage: React.FC = () => {
             onClick={handleStart}
             className="bg-gray-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-black hover:scale-105 transition-all shadow-lg border border-gray-800 text-sm md:text-base"
           >
-            {user ? 'Dashboard' : 'Connexion'}
+            {user ? 'Dashboard' : 'Commencer'}
           </button>
         </div>
       </nav>
@@ -127,7 +127,7 @@ export const LandingPage: React.FC = () => {
               <Wand2 className="group-hover:rotate-12 transition-transform" />
               {user ? 'Accéder au Studio' : 'Créer mon premier émoji'}
             </button>
-            <p className="text-sm text-gray-400 mt-2 md:mt-0">Test gratuit sans CB • 6 crédits offerts</p>
+            <p className="text-sm text-gray-400 mt-2 md:mt-0">Commencer gratuitement</p>
           </div>
 
           {/* THE SCANNER VISUAL */}

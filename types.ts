@@ -4,7 +4,8 @@ export enum AppState {
   CONFIGURING = 'CONFIGURING',
   PROCESSING = 'PROCESSING',
   SUCCESS = 'SUCCESS',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  EDITING = 'EDITING'
 }
 
 export enum View {
